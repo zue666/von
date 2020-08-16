@@ -11,7 +11,7 @@ func main() {
     shutdown := make(chan os.Signal,1)
     signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
     app := von.New(shutdown)
-    app.Handle(http.MethodGet, "/", func(ctx context.Context, w http.ResponseWriter, r *http.Request, params httprouter.Params) error {
+    app.Handle(http.MethodGet, "/", func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
         data := map[string]string{"message": "Hello, World!"}
 
         return von.Respond(ctx,w,data,http.StatusOK)
@@ -33,8 +33,8 @@ A sample middleware:
 ```
 func GreeterMiddleware(log *log.Logger) von.Handler {
     return func(before von.Handler) von.Handler {
-        handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, _ httprouter.Params) error {
-            err := before(ctx, w, r, _)
+        handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+            err := before(ctx, w, r)
             log.Println("hello from GreeterMiddleware")
             return err
         }
@@ -52,7 +52,7 @@ app := von.New(shutdown, GreeterMiddleware(log))
 ```
 log := log.New(os.Stdout, "app ", log.Lstdflags)
 
-handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, _ httprouter.Params) error {
+handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
     return von.Respond(ctx, w, "greeting", http.StatusOK)
 }
 
