@@ -18,6 +18,8 @@ type ctxKey int
 // KeyValues is how request values are stored/retrieved.
 const KeyValues ctxKey = 1
 
+const ParamsKey ctxKey = 2
+
 // Values represent state for each request.
 type Values struct {
 	TraceID string
@@ -62,6 +64,8 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 		ctx, span := global.Tracer("von").Start(r.Context(), "von.rootHandler")
 		defer span.End()
 
+		ctx = context.WithValue(ctx, ParamsKey, &Params{params})
+
 		// set the context with the required values to process the request.
 		v := Values{
 			TraceID: span.SpanContext().SpanID.String(),
@@ -70,9 +74,6 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 
 		// setting request's Values
 		ctx = context.WithValue(ctx, KeyValues, &v)
-
-		// setting http request params
-		ctx = context.WithValue(ctx, httprouter.ParamsKey, params)
 
 		// call the wrapped handler functions.
 		if err := handler(ctx, w, r); err != nil {

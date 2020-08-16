@@ -1,6 +1,7 @@
 package von
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -33,9 +34,20 @@ func init() {
 	})
 }
 
-// Params returns params slice from request context
-func Params(r *http.Request) httprouter.Params {
-	return httprouter.ParamsFromContext(r.Context())
+// Params holds route params
+type Params struct {
+	httprouter.Params
+}
+
+// ByName returns the value of the given param key
+func (params *Params) ByName(name string) string {
+	return params.Params.ByName(name)
+}
+
+// ParamsFromContext returns params slice from request context
+func ParamsFromContext(ctx context.Context) *Params {
+	v, _ := ctx.Value(ParamsKey).(*Params)
+	return v
 }
 
 // Decode reads the body of an HTTP request looking for a JSON document.
