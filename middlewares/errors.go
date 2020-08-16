@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/zue666/von"
 	"go.opentelemetry.io/otel/api/global"
 )
@@ -15,7 +14,7 @@ import (
 //  Unexpected errors (status >= 500) are logged.
 func Errors(log *log.Logger) von.Middleware {
 	m := func(before von.Handler) von.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params httprouter.Params) error {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			ctx, span := global.Tracer("von").Start(ctx, "von.middlewares.Errors")
 			defer span.End()
 
@@ -24,7 +23,7 @@ func Errors(log *log.Logger) von.Middleware {
 				return von.NewShutdownError("value missing from context")
 			}
 
-			if err := before(ctx, w, r, params); err != nil {
+			if err := before(ctx, w, r); err != nil {
 				log.Printf("%s : ERROR : %v", v.TraceID, err)
 				if err := von.RespondError(ctx, w, err); err != nil {
 					return err

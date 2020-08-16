@@ -26,7 +26,7 @@ type Values struct {
 }
 
 // Handler is a type that handles an http request.
-type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request, params httprouter.Params) error
+type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
 
 // App is the entrypoint to our http service and what configures our context object
 // for each of our http handlers.
@@ -68,14 +68,20 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 			Now:     time.Now(),
 		}
 
+		// setting request's Values
 		ctx = context.WithValue(ctx, KeyValues, &v)
 
+		// setting http request params
+		ctx = context.WithValue(ctx, httprouter.ParamsKey, params)
+
 		// call the wrapped handler functions.
-		if err := handler(ctx, w, r, params); err != nil {
+		if err := handler(ctx, w, r); err != nil {
 			a.SignalShutdown()
 			return
 		}
 	}
+
+	// a.Router.Handler(method,path,h)
 
 	a.Router.Handle(method, path, h)
 }

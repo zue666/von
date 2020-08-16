@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/zue666/von"
 	"go.opentelemetry.io/otel/api/global"
 )
@@ -25,11 +24,11 @@ var m = struct {
 // Metrics updates program counters.
 func Metrics() von.Middleware {
 	m := func(before von.Handler) von.Handler {
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request, params httprouter.Params) error {
+		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 			ctx, span := global.Tracer("von").Start(ctx, "von.middlewares.Metrics")
 			defer span.End()
 
-			err := before(ctx, w, r, params)
+			err := before(ctx, w, r)
 			m.req.Add(1)
 			if m.req.Value()%100 == 0 {
 				m.gr.Set(int64(runtime.NumGoroutine()))

@@ -9,6 +9,7 @@ import (
 
 	en "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
+	"github.com/julienschmidt/httprouter"
 	validator "gopkg.in/go-playground/validator.v9"
 	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
 )
@@ -30,6 +31,11 @@ func init() {
 		}
 		return name
 	})
+}
+
+// Params returns params slice from request context
+func Params(r *http.Request) httprouter.Params {
+	return httprouter.ParamsFromContext(r.Context())
 }
 
 // Decode reads the body of an HTTP request looking for a JSON document.
