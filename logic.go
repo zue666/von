@@ -9,7 +9,6 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/instrumentation/othttp"
 )
 
 // ctxKey is the type of value for the context key.
@@ -18,6 +17,7 @@ type ctxKey int
 // KeyValues is how request values are stored/retrieved.
 const KeyValues ctxKey = 1
 
+// ParamsKey is how params values are stored/retrieved.
 const ParamsKey ctxKey = 2
 
 // Values represent state for each request.
@@ -34,7 +34,7 @@ type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 // for each of our http handlers.
 type App struct {
 	*httprouter.Router
-	oth      http.Handler
+	// oth      http.Handler
 	shutdown chan os.Signal
 	mw       []Middleware
 }
@@ -47,7 +47,7 @@ func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
 		mw:       mw,
 	}
 
-	app.oth = othttp.NewHandler(app.Router, "von")
+	// app.oth = othttp.NewHandler(app.Router, "von")
 	return &app
 }
 
@@ -91,7 +91,7 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 // using opentelemetry ServeHTTP instead.
 // That handler wraps the HTTPRouter handler so the routes are served.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.oth.ServeHTTP(w, r)
+	a.Router.ServeHTTP(w, r)
 }
 
 // SignalShutdown is used to gracefully shutdown the app when an integrity issue is identified.
