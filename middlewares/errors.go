@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/zue666/von"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Errors handles errors coming out of the handler call chanin.
@@ -15,7 +15,7 @@ import (
 func Errors(log *log.Logger) von.Middleware {
 	m := func(before von.Handler) von.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := global.Tracer("von").Start(ctx, "von.middlewares.Errors")
+			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "von.middlewares.Errors")
 			defer span.End()
 
 			v, ok := ctx.Value(von.KeyValues).(*von.Values)

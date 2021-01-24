@@ -7,7 +7,7 @@ import (
 	"runtime"
 
 	"github.com/zue666/von"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // m contains the global program counters for the application.
@@ -25,7 +25,7 @@ var m = struct {
 func Metrics() von.Middleware {
 	m := func(before von.Handler) von.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := global.Tracer("von").Start(ctx, "von.middlewares.Metrics")
+			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "von.middlewares.Metrics")
 			defer span.End()
 
 			err := before(ctx, w, r)
