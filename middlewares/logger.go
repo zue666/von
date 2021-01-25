@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/zue666/von"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Logger logs the request information:
@@ -15,7 +15,7 @@ import (
 func Logger(log *log.Logger) von.Middleware {
 	f := func(before von.Handler) von.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			ctx, span := global.Tracer("von").Start(ctx, "von.middlewares.Logger")
+			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "von.middlewares.Logger")
 			defer span.End()
 			v, ok := ctx.Value(von.KeyValues).(*von.Values)
 			if !ok {

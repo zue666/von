@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ctxKey is the type of value for the context key.
@@ -34,18 +35,25 @@ type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) e
 // for each of our http handlers.
 type App struct {
 	*httprouter.Router
-	// oth      http.Handler
+	oth      http.Handler
 	shutdown chan os.Signal
 	mw       []Middleware
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
 func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
+	router := httprouter.New()
 	app := App{
-		Router:   httprouter.New(),
+		Router:   router,
+		oth:      otelhttp.NewHandler(router, "request"),
 		shutdown: shutdown,
 		mw:       mw,
 	}
+
+	// app.Router.NotFound =
+	// http.HandlerFunc(w http.ResponseWriter, r *http.Request) {
+
+	// }
 
 	// app.oth = othttp.NewHandler(app.Router, "von")
 	return &app
@@ -61,7 +69,8 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 
 	h := func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		// start or expand a distributed trace.
-		ctx, span := global.Tracer("von").Start(r.Context(), "von.rootHandler")
+		ctx := r.Context()
+		ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, r.URL.Path)
 		defer span.End()
 
 		ctx = context.WithValue(ctx, ParamsKey, &Params{params})
@@ -91,7 +100,8 @@ func (a *App) Handle(method string, path string, handler Handler, mw ...Middlewa
 // using opentelemetry ServeHTTP instead.
 // That handler wraps the HTTPRouter handler so the routes are served.
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.Router.ServeHTTP(w, r)
+	// a.Router.ServeHTTP(w, r)
+	a.oth.ServeHTTP(w, r)
 }
 
 // SignalShutdown is used to gracefully shutdown the app when an integrity issue is identified.

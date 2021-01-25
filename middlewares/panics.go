@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/zue666/von"
-	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Panics recovers from panics and converts the panic to an error so it is reported
@@ -16,7 +16,7 @@ import (
 func Panics(log *log.Logger) von.Middleware {
 	m := func(after von.Handler) von.Handler {
 		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) (err error) {
-			ctx, span := global.Tracer("von").Start(ctx, "von.middlewares.Panics")
+			ctx, span := trace.SpanFromContext(ctx).Tracer().Start(ctx, "von.middlewares.Panics")
 			defer span.End()
 
 			v, ok := ctx.Value(von.KeyValues).(*von.Values)
