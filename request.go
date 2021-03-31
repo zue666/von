@@ -8,11 +8,12 @@ import (
 	"reflect"
 	"strings"
 
-	en "github.com/go-playground/locales/en"
+	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10/non-standard/validators"
+	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/julienschmidt/httprouter"
-	validator "gopkg.in/go-playground/validator.v9"
-	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
 )
 
 var validate = validator.New()
@@ -25,6 +26,7 @@ func init() {
 	lang, _ := translator.GetTranslator("en")
 	en_translations.RegisterDefaultTranslations(validate, lang)
 
+	validate.RegisterValidation("notblank", validators.NotBlank)
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
 		if name == "-" {
@@ -32,6 +34,7 @@ func init() {
 		}
 		return name
 	})
+
 }
 
 // Params holds route params
